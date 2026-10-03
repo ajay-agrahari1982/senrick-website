@@ -1,0 +1,6 @@
+{
+  "redirects": [
+    { "source": "/contact-5", "destination": "/contact", "type": 301 },
+    { "source": "/cart-page", "destination": "/shop", "type": 301 }
+  ]
+}
