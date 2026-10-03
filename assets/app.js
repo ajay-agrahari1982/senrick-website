@@ -934,6 +934,7 @@ function addToCart(name, price, btnEl){
   const existing = cart.find(i=>i.name===name);
   if(existing){ existing.qty++; if(img) existing.img = img; } else { cart.push({name, price, qty:1, img}); }
   saveCart(); showToast(name+' added to cart'); openCart();
+  if(window.gtag){ gtag('event','add_to_cart',{currency:'INR', value:price, items:[{item_name:name, price:price, quantity:1}]}); }
 }
 function changeQty(name, delta){
   const item = cart.find(i=>i.name===name); if(!item) return;
@@ -982,6 +983,7 @@ function checkout(){
   if(!/^[6-9]\d{9}$/.test(digits)){ note.textContent = 'Please enter a valid 10-digit mobile number.'; phoneEl.focus(); return; }
   note.textContent = '';
   const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
+  if(window.gtag){ gtag('event','place_order',{currency:'INR', value:total, items:cart.map(i=>({item_name:i.name, price:i.price, quantity:i.qty}))}); }
   const lines = cart.map((i,idx)=> (idx+1)+'. '+i.name+' x'+i.qty+' — ₹'+(i.price*i.qty)).join('\n');
   const msg = 'Hi Senrick, I would like to place an order:\n\n'+lines+'\n\nTotal: ₹'+total+'\n\nName: '+name+'\nMobile: '+digits+
     '\n\nPlease confirm availability — I understand you will contact me to confirm delivery and share UPI payment details.';
@@ -1230,3 +1232,18 @@ setTimeout(positionChatBelowWhatsApp, 1200);
 if(document.fonts && document.fonts.ready){
   document.fonts.ready.then(positionChatBelowWhatsApp);
 }
+
+/* GA4: explicit tracking for calls, WhatsApp, and Book Now clicks site-wide */
+document.addEventListener('click', e=>{
+  if(!window.gtag) return;
+  const a = e.target.closest('a[href]');
+  if(!a) return;
+  const href = a.getAttribute('href') || '';
+  if(href.startsWith('tel:')){
+    gtag('event','phone_call_click',{phone_number: href.replace('tel:',''), page_path: location.pathname});
+  }else if(href.includes('wa.me')){
+    gtag('event','whatsapp_click',{page_path: location.pathname});
+  }else if(href === '/book-online'){
+    gtag('event','book_now_click',{page_path: location.pathname});
+  }
+});
