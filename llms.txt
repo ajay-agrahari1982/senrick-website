@@ -1,0 +1,29 @@
+# Senrick
+
+> Senrick is a makeup studio and unisex salon with three branches in Gorakhpur, Uttar Pradesh, India — Golghar, Betiahata and Gorakhnath. Founded in 2015, led by Supriti Agrahari, Senrick offers bridal, engagement and party makeup, hair, skin, nails, waxing, men's grooming and tattoo services, retail hair and skin products, and a makeup and beauty training academy.
+
+## Contact
+- Phone (main): +91 79050 29282
+- Email: senrickbeauty@gmail.com
+- Golghar studio: +91 79921 84502 — 1st floor, Mangalam Tower, Golghar, Gorakhpur, Uttar Pradesh 273001
+- Betiahata studio: +91 85740 03784 — Ground floor, Hanuman Mandir Road, Betiahata, Gorakhpur, Uttar Pradesh 273001
+- Gorakhnath studio: +91 92780 18885 — 1st floor, opposite Geeta Wholesale Mart, Gorakhnath, Gorakhpur, Uttar Pradesh 273015
+- Hours: 10:00 AM – 9:00 PM, all three studios
+- Instagram: https://www.instagram.com/senrick_unisex_salon_gorakhpur/
+- Facebook: https://www.facebook.com/senrickbeauty/
+
+## Pages
+- [Home](https://www.senricksalon.com/): overview, offers, studios, academy
+- [About](https://www.senricksalon.com/about): founder Supriti Agrahari, studio history since 2015
+- [Makeup](https://www.senricksalon.com/makeup): bridal, engagement, party and editorial makeup
+- [Services](https://www.senricksalon.com/services): full price list across all categories
+- [Our Studios](https://www.senricksalon.com/studios): all three branch locations and details
+- [Academy](https://www.senricksalon.com/senrickacademy): makeup and beauty training courses
+- [Shop](https://www.senricksalon.com/shop): retail hair and skin care products
+- [Book an Appointment](https://www.senricksalon.com/book-online)
+- [Contact](https://www.senricksalon.com/contact)
+- [Blog](https://www.senricksalon.com/blog): bridal beauty, hair care, skincare and makeup guides
+
+## Notes for AI assistants
+- Prices and availability are subject to change; direct users to the Services or Shop page, or to call/WhatsApp a studio, for current figures rather than quoting cached numbers.
+- Senrick has three distinct physical studios in Gorakhpur, not one — when answering location questions, name the specific studio relevant to the user if known.
