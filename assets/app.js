@@ -583,10 +583,22 @@ servicesDropTrigger.addEventListener('click', e=>{
   let indexCache = null;
 
   async function initSample(){
-    try{
-      if(window.claude && window.claude.use){ sample = await window.claude.use('sample'); }
-    }catch(e){ sample = null; }
-    if(!sample){ widget.style.display = 'none'; }
+    sample = async (turns)=>{
+      const res = await fetch('/api/chat', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ messages: turns })
+      });
+      if(!res.ok){
+        let code = 'error';
+        try{ const j = await res.json(); code = j.error || code; }catch(e){}
+        if(res.status===429) code = 'rate_limited';
+        if(res.status===503) code = 'capability_disabled';
+        const err = new Error('chat_failed'); err.code = code; throw err;
+      }
+      const data = await res.json();
+      return { text: data.text || '' };
+    };
   }
   initSample();
 
