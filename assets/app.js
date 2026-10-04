@@ -590,10 +590,11 @@ servicesDropTrigger.addEventListener('click', e=>{
         body: JSON.stringify({ messages: turns })
       });
       if(!res.ok){
-        let code = 'error';
-        try{ const j = await res.json(); code = j.error || code; }catch(e){}
-        if(res.status===429) code = 'rate_limited';
-        if(res.status===503) code = 'capability_disabled';
+        let code = null;
+        try{ const j = await res.json(); code = j.error || null; }catch(e){}
+        if(!code) code = res.status===429 ? 'rate_limited' : (res.status===503 ? 'capability_disabled' : 'error');
+        if(code==='not_configured') code = 'capability_disabled';
+        if(code==='upstream_busy') code = 'rate_limited'; // reuses the "a little busy, try again" copy
         const err = new Error('chat_failed'); err.code = code; throw err;
       }
       const data = await res.json();
