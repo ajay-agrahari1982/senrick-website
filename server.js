@@ -4,6 +4,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = 'gemini-3.8-flash';
+const GEMINI_FALLBACK_MODEL = 'gemini-3.1-flash-lite';
 
 app.use(express.json({ limit: '200kb' }));
 
@@ -53,25 +54,38 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ error: 'bad_request' });
     }
 
-    const upstream = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': GEMINI_API_KEY,
-        },
-        body: JSON.stringify({
-          contents: cleanMessages,
-          generationConfig: { maxOutputTokens: 300 },
-        }),
-      }
-    );
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+    async function callGemini(model) {
+      return fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': GEMINI_API_KEY,
+          },
+          body: JSON.stringify({
+            contents: cleanMessages,
+            generationConfig: { maxOutputTokens: 300 },
+          }),
+        }
+      );
+    }
+
+    // Try the primary model, retrying briefly on "temporarily overloaded" (503).
+    // If still overloaded after retries, fall back to a more established model
+    // before giving up — a busy moment on Google's side shouldn't reach the visitor.
+    let upstream = await callGemini(GEMINI_MODEL);
+    if (upstream.status === 503) { await sleep(600); upstream = await callGemini(GEMINI_MODEL); }
+    if (upstream.status === 503) { await sleep(1500); upstream = await callGemini(GEMINI_MODEL); }
+    if (upstream.status === 503) { upstream = await callGemini(GEMINI_FALLBACK_MODEL); }
 
     if (!upstream.ok) {
       const errBody = await upstream.text().catch(() => '');
       console.error('Gemini API error', upstream.status, errBody);
       if (upstream.status === 429) return res.status(429).json({ error: 'rate_limited' });
+      if (upstream.status === 503) return res.status(503).json({ error: 'upstream_busy' });
       return res.status(502).json({ error: 'upstream_error' });
     }
 
