@@ -710,6 +710,10 @@ servicesDropTrigger.addEventListener('click', e=>{
       if(!num){ note.textContent = 'Please enter a valid 10-digit mobile number.'; return; }
       const msg = 'Hi Senrick, I have a question (via website chat):\n' + question + '\n\nPlease call/WhatsApp me on ' + num + '.';
       const url = 'https://wa.me/' + WA_NUMBER + '?text=' + encodeURIComponent(msg);
+      try{
+        fetch('/api/enquiry', { method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ source:'chat', phone:num, message:question }) });
+      }catch(e){}
       row.remove(); note.remove();
       addMsg('My number: ' + num, 'chat-msg-user');
       addMsg('Almost done — press Send in WhatsApp to submit your question. Once it is sent, we will reach back to you in a while.', 'chat-msg-bot');
@@ -785,6 +789,11 @@ function submitSyllabusLead(id, courseName){
   if(moreBtn) moreBtn.style.display = 'none';
   document.getElementById('gate-form-' + id).classList.remove('open');
   showToast('Full syllabus unlocked!');
+
+  try{
+    fetch('/api/enquiry', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ source:'academy', name, phone, message: 'Syllabus unlocked: ' + courseName }) });
+  }catch(e){}
 
   // send the lead via email using the dedicated lead-capture template
   if(EMAILJS_PUBLIC_KEY && EMAILJS_LEAD_TEMPLATE_ID && window.emailjs){
@@ -1171,6 +1180,11 @@ function submitBooking(){
   renderMyBookings();
 }
 function notifyNewBooking(b){
+  try{
+    fetch('/api/enquiry', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ source:'booking', name:b.name, phone:b.phone,
+        message: `${b.service} · ${b.branch} · ${b.date} at ${b.slot}` }) });
+  }catch(e){}
   const msg = `New booking request — Senrick\n`+
     `Service(s): ${b.service}\n`+
     `Studio: ${b.branch}\n`+
