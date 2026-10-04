@@ -2,7 +2,8 @@ const express = require('express');
 const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_MODEL = 'gemini-2.5-flash';
 
 app.use(express.json({ limit: '200kb' }));
 
@@ -27,7 +28,7 @@ function isRateLimited(ip) {
 /* ---------- Chat API: proxies to Anthropic so the API key never reaches the browser ---------- */
 app.post('/api/chat', async (req, res) => {
   try {
-    if (!ANTHROPIC_API_KEY) {
+    if (!GEMINI_API_KEY) {
       return res.status(503).json({ error: 'not_configured' });
     }
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
@@ -39,40 +40,44 @@ app.post('/api/chat', async (req, res) => {
     if (!messages || !messages.length) {
       return res.status(400).json({ error: 'bad_request' });
     }
-    // Only forward role/content — never trust/forward anything else from the client
+    // Only forward role/content — never trust/forward anything else from the client.
+    // Convert to Gemini's shape: role 'assistant' -> 'model', content -> parts:[{text}]
     const cleanMessages = messages
       .filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string')
       .slice(-8)
-      .map(m => ({ role: m.role, content: m.content.slice(0, 4000) }));
+      .map(m => ({
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: m.content.slice(0, 4000) }],
+      }));
     if (!cleanMessages.length) {
       return res.status(400).json({ error: 'bad_request' });
     }
 
-    const upstream = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 300,
-        messages: cleanMessages,
-      }),
-    });
+    const upstream = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': GEMINI_API_KEY,
+        },
+        body: JSON.stringify({
+          contents: cleanMessages,
+          generationConfig: { maxOutputTokens: 300 },
+        }),
+      }
+    );
 
     if (!upstream.ok) {
       const errBody = await upstream.text().catch(() => '');
-      console.error('Anthropic API error', upstream.status, errBody);
+      console.error('Gemini API error', upstream.status, errBody);
       if (upstream.status === 429) return res.status(429).json({ error: 'rate_limited' });
       return res.status(502).json({ error: 'upstream_error' });
     }
 
     const data = await upstream.json();
-    const text = (data.content || [])
-      .filter(b => b.type === 'text')
-      .map(b => b.text)
+    const text = (((data.candidates || [])[0] || {}).content || { parts: [] }).parts
+      .map(p => p.text || '')
       .join('')
       .trim();
 
@@ -93,5 +98,5 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
   console.log('Senrick website server running on port ' + PORT);
-  console.log('Chat API: ' + (ANTHROPIC_API_KEY ? 'configured' : 'NOT CONFIGURED — set ANTHROPIC_API_KEY'));
+  console.log('Chat API: ' + (GEMINI_API_KEY ? 'configured' : 'NOT CONFIGURED — set GEMINI_API_KEY'));
 });
