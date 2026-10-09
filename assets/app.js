@@ -353,6 +353,9 @@ const SERVICES = [
   {cat:'makeup', grp:'Reception Makeup', name:'Senrick Signature (Supriti Agrahari)', price:'₹22,000'},
 ];
 
+// Retail discount on all shop products (percent). Set to 0 to switch off.
+const DISCOUNT_PERCENT = 10;
+function salePrice(mrp){ return DISCOUNT_PERCENT>0 ? Math.round(mrp*(100-DISCOUNT_PERCENT)/100) : mrp; }
 const PRODUCTS = [
   // ---- Hair Products (studio stock) ----
   {cat:'hair', name:'Xtenso Care Pro-Keratin Shampoo – Blue, 250ml', img:'/assets/img/img065.jpg', brand:"L'Oréal Professionnel", price:610, tag:'Hair', concern:['Frizz Control & Smoothing']},
@@ -941,6 +944,7 @@ document.getElementById('faqList')?.addEventListener('click', e=>{
 
 let cart = [];
 try{ cart = JSON.parse(localStorage.getItem('senrick_cart')||'[]'); }catch(e){ cart = []; }
+cart.forEach(i=>{ const pr = PRODUCTS.find(x=>x.name===i.name); if(pr && pr.price) i.price = salePrice(pr.price); });
 function saveCart(){ try{ localStorage.setItem('senrick_cart', JSON.stringify(cart)); }catch(e){} renderCart(); }
 function addToCart(name, price, btnEl){
   let img = '';
@@ -985,7 +989,7 @@ function renderCart(){
             <button onclick="changeQty('${i.name.replace(/'/g,"\\'")}',1)">+</button>
           </div>
         </div>
-        <div style="font-weight:700;">₹${i.price*i.qty}</div>
+        <div style="font-weight:700; text-align:right;">${(()=>{const pr=PRODUCTS.find(x=>x.name===i.name); return (DISCOUNT_PERCENT>0 && pr && pr.price) ? `<div style="font-weight:400; font-size:.75rem; opacity:.6; text-decoration:line-through;">MRP ₹${pr.price*i.qty}</div>` : '';})()}₹${i.price*i.qty}${DISCOUNT_PERCENT>0?`<div style="font-weight:600; font-size:.66rem; color:var(--gold-bright);">${DISCOUNT_PERCENT}% discount</div>`:''}</div>
       </div>`).join('');
   }
   const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
@@ -1007,7 +1011,7 @@ function checkout(){
   const total = cart.reduce((s,i)=>s+i.price*i.qty,0);
   if(window.gtag){ gtag('event','place_order',{currency:'INR', value:total, items:cart.map(i=>({item_name:i.name, price:i.price, quantity:i.qty}))}); }
   const lines = cart.map((i,idx)=> (idx+1)+'. '+i.name+' x'+i.qty+' — ₹'+(i.price*i.qty)).join('\n');
-  const msg = 'Hi Senrick, I would like to place an order:\n\n'+lines+'\n\nTotal: ₹'+total+'\n\nName: '+name+'\nMobile: '+digits+
+  const msg = 'Hi Senrick, I would like to place an order:\n\n'+lines+'\n\nTotal: ₹'+total+(DISCOUNT_PERCENT>0?' (incl. '+DISCOUNT_PERCENT+'% discount)':'')+'\n\nName: '+name+'\nMobile: '+digits+
     '\n\nPlease confirm availability — I understand you will contact me to confirm delivery and share UPI payment details.';
   const url = 'https://wa.me/917007636989?text='+encodeURIComponent(msg);
   let opened = null;
@@ -1054,7 +1058,7 @@ function renderProducts(){
         ${p.brand ? `<span class="brand">${p.brand}</span>` : ''}
         <h4>${p.name}</h4>
         <div class="row">
-          ${p.price ? `<span class="price">₹${p.price}</span><button class="btn btn-sm" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${p.price}, this)">Add</button>` : `<span class="ask">Ask in-studio for price</span>`}
+          ${p.price ? `<span class="pricebox">${DISCOUNT_PERCENT>0?`<span class="mrp">MRP ₹${p.price}</span>`:''}<span class="price">₹${salePrice(p.price)}</span>${DISCOUNT_PERCENT>0?`<span class="off">${DISCOUNT_PERCENT}% DISCOUNT</span>`:''}</span><button class="btn btn-sm" onclick="addToCart('${p.name.replace(/'/g,"\\'")}', ${salePrice(p.price)}, this)">Add</button>` : `<span class="ask">Ask in-studio for price</span>`}
         </div>
       </div>
     </div>`).join('');
