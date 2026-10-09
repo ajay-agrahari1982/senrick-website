@@ -404,6 +404,10 @@ nav.primary a:hover, nav.primary a.active{color:var(--gold-bright);}
 .product-body .cat{font-size:0.66rem; font-weight:700; color:var(--gold); text-transform:uppercase; letter-spacing:0.08em;}
 .product-body .row{display:flex; justify-content:space-between; align-items:center; margin-top:auto; gap:10px;}
 .product-body .price{font-family:'Work Sans',sans-serif; font-weight:700; font-size:1.18rem; letter-spacing:0.01em; color:var(--gold-bright);}
+.product-body .pricebox{display:grid; grid-template-areas:"mrp off" "price price"; grid-template-columns:auto auto; justify-content:start; align-items:center; column-gap:10px; row-gap:2px;}
+.product-body .mrp{grid-area:mrp; font-size:0.82rem; color:var(--muted); text-decoration:line-through; text-decoration-thickness:1px;}
+.product-body .off{grid-area:off; font-size:0.62rem; font-weight:700; letter-spacing:0.06em; color:#0b0b0b; background:var(--gold-bright); padding:2px 7px; border-radius:3px; white-space:nowrap;}
+.product-body .pricebox .price{grid-area:price; font-size:1.3rem;}
 @media (max-width:960px){.product-grid{grid-template-columns:repeat(2,1fr);}}
 
 /* cart */
