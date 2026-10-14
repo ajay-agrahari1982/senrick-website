@@ -101,6 +101,18 @@ app.get('/admin', (req, res) => {
 app.get('/contact-5', (req, res) => res.redirect(301, '/contact'));
 app.get('/cart-page', (req, res) => res.redirect(301, '/shop'));
 
+/* Old Wix Bookings service pages (/service-page/<slug>) -> closest category page */
+app.get('/service-page/:slug', (req, res) => {
+  const s = (req.params.slug || '').toLowerCase();
+  let dest = '/skin-services';
+  if (/bridal|makeup|airbrush/.test(s)) dest = '/makeup';
+  else if (/(^|-)men(-|s|$)|beard|shaving|male/.test(s)) dest = '/men-services';
+  else if (/pedicure|manicure/.test(s)) dest = '/pedicure';
+  else if (/nail/.test(s)) dest = '/nails';
+  else if (/hair|shampoo|conditioning|spa|smoothening|keratin|botox|nanoplastia|straight|chunks|streak|highlight|colour|color/.test(s)) dest = '/hair-services';
+  res.redirect(301, dest);
+});
+
 /* ---------- Very basic in-memory rate limit for the chat endpoint ----------
    Not distributed / resets on restart — adequate for this site's traffic.
    Protects the Anthropic API key from abuse (each call costs money). */
