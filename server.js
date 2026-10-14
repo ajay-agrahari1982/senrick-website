@@ -101,6 +101,9 @@ app.get('/admin', (req, res) => {
 app.get('/contact-5', (req, res) => res.redirect(301, '/contact'));
 app.get('/cart-page', (req, res) => res.redirect(301, '/shop'));
 
+/* Old Wix booking-calendar pages (were noindex on Wix) -> online booking page */
+app.get('/booking-calendar/:slug', (req, res) => res.redirect(301, '/book-online'));
+
 /* Old Wix Bookings service pages (/service-page/<slug>) -> closest category page */
 app.get('/service-page/:slug', (req, res) => {
   const s = (req.params.slug || '').toLowerCase();
