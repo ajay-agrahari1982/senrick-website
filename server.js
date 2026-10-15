@@ -274,6 +274,26 @@ const ADMIN_PAGE_HTML = `<!DOCTYPE html>
   </script>
 </body></html>`;
 
+/* ---------- Humans get the full interactive site; crawlers get the pre-rendered page ----------
+   Each route folder (e.g. /gorakhnath-branch/) holds a plain pre-rendered page for search engines,
+   AI crawlers and link-preview bots. A real visitor (e.g. from Google Business Profile) should land in
+   the full site instead, so for non-bots we serve the SPA at those same URLs. */
+const BOT_RE = /bot|crawl|spider|slurp|google|bing|yandex|duckduck|baidu|gpt|claude|anthropic|perplexity|oai-|cohere|amazonbot|applebot|facebookexternalhit|meta-external|whatsapp|telegram|twitter|linkedin|slack|discord|pinterest|embedly|preview|lighthouse|headless|python-requests|curl|wget/i;
+const PRERENDERED = new Set(
+  fs.readdirSync(__dirname, { withFileTypes: true })
+    .filter(d => d.isDirectory() && fs.existsSync(path.join(__dirname, d.name, 'index.html')))
+    .map(d => d.name)
+);
+PRERENDERED.delete('assets');
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+  const parts = req.path.replace(/\/+$/, '').split('/').filter(Boolean);
+  if (!parts.length || !PRERENDERED.has(parts[0])) return next();
+  res.setHeader('Vary', 'User-Agent');
+  if (BOT_RE.test(req.headers['user-agent'] || '')) return next();   // bots: static page below
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 /* ---------- Static files (site, assets, the pre-rendered AI-visibility pages) ---------- */
 app.use(express.static(__dirname, { extensions: ['html'] }));
 
